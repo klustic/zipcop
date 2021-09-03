@@ -1,5 +1,7 @@
 # zipcop
 
+Zipcop is a tool that monitors directory tree(s) for Zip/JAR archives, and adds/updates the files contained in those archives as specified in the `filesToReplace` map in `main.go`.
+
 ## Building
 
 ```
