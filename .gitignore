@@ -1,0 +1,11 @@
+main.go.*
+
+example/*
+!example/example.zip
+
+resources/*
+!resources/.gitempty
+
+zipcop
+
+.DS_Store
