@@ -1,5 +1,7 @@
 package main
 
+// TODO : Wrap shouldIgnore map accesses in Mutex : https://ashish.one/blogs/fatal-error-concurrent-map-writes/
+
 import (
 	"archive/zip"
 	_ "embed"
@@ -30,7 +32,7 @@ var filesToReplace map[string][]byte
 // ZIP files to ignore inotify events for
 var shouldIgnore map[string]bool
 
-func addFileToZip(zipPath string) error {
+func addFileToZip(zipPath string, create bool) error {
 	var err error
 
 	// Copy files to a local map
@@ -74,10 +76,12 @@ func addFileToZip(zipPath string) error {
 	}
 
 	// Copy over any files that are left over
-	for k, v := range localFiles {
-		w, _ := zipWriter.Create(k)
-		io.Writer.Write(w, v)
-		log.Printf("Added  -> %s:%s\n", zipPath, k)
+	if create {
+		for k, v := range localFiles {
+			w, _ := zipWriter.Create(k)
+			io.Writer.Write(w, v)
+			log.Printf("Added  -> %s:%s\n", zipPath, k)
+		}
 	}
 
 	// Move temporary file over original; we want to make sure the inotify watch doesn't fire on this recursively!
@@ -89,6 +93,7 @@ func addFileToZip(zipPath string) error {
 
 func main() {
 	recursePtr := flag.Bool("recurse", false, "Recursively add watches to all subdirectories")
+	createPtr := flag.Bool("create", false, "Add files that aren't present - default behavior is to only update files")
 	flag.Parse()
 
 	// Populate all files we want to replace
@@ -150,7 +155,7 @@ func main() {
 						}
 
 						// Write files to .zip
-						go addFileToZip(zipPath)
+						go addFileToZip(zipPath, *createPtr)
 					}
 				}
 
